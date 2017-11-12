@@ -5,7 +5,7 @@
     "brace-style": [ 2, "1tbs", {
         "allowSingleLine": true
     }],
-    "comma-dangle": [ 2, "never" ],
+    "comma-dangle": [ "error", "always-multiline" ],
     "comma-spacing": [ 2 ],
     "curly": [ 2, "multi-line" ],
     "eqeqeq": [ 2 ],
@@ -32,7 +32,7 @@
         "uninitialized": "always"
     }],
     "quotes": [ 2, "single" ],
-    "semi": [ 2, "always" ],
+    "semi": [ 2, "never" ],
     "space-before-blocks": [ 2 ],
     "space-before-function-paren": [ 2, "never" ],
     "space-in-parens": [ 2 ]
