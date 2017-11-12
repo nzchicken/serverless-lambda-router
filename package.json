@@ -1,6 +1,6 @@
 {
   "name": "serverless-lambda-router",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Lambda router for serverless framework",
   "main": "dist/index.js",
   "scripts": {
@@ -15,7 +15,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/swhite24/serverless-lambda-router.git"
+    "url": "git://github.com/nzchicken/serverless-lambda-router.git"
   },
   "devDependencies": {
     "babel-cli": "^6.24.0",

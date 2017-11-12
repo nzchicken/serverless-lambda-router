@@ -34,11 +34,11 @@ class LambdaRouter {
 
       } catch (err) {
 
-        const body = this.onError
-          ? this.onError(new Response(err.message), event)
-          : new Response(err.message, 500)
+        const response = new Response(err.message, 500)
 
-        cb(null, body.getResponse())
+        if (this.onError) this.onError(response, err, event)
+
+        cb(null, response.getResponse())
       }
     }
   }
