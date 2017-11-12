@@ -19,17 +19,18 @@ describe('Lambda Router', () => {
         const key = method === 'del' ? 'DELETE' : method.toUpperCase();
 
         router[method]('/foo', handler);
-        expect(router.routes[key]).to.be.instanceOf(Array);
-        expect(router.routes[key]).to.have.length(1);
+        expect(router.routes[key]).to.be.a('object');
+        expect(router.routes[key]['/foo']).to.be.a('function');
       });
-      it(`#${ method } should allow multiple handlers`, () => {
-        const handler1 = sinon.spy();
-        const handler2 = sinon.spy();
+      it(`#${ method } should prevent more than one handler`, () => {
+        const handler = sinon.spy();
         const key = method === 'del' ? 'DELETE' : method.toUpperCase();
 
-        router[method]('/foo', handler1, handler2);
-        expect(router.routes[key][0].handlers).to.have.length(2);
-      });
+        const func = () => { router[method]('/foo', handler )};
+
+        expect(func).to.not.throw();
+        expect(func).to.throw();
+      })
     });
   });
 
@@ -55,25 +56,25 @@ describe('Lambda Router', () => {
       expect(context.callbackWaitsForEmptyEventLoop).to.equal(false);
     });
 
-    it('should setup a state object on context', async () => {
+    it('should fail if no handlers are found', async () => {
       const handler = router.handler();
 
-      try {
-        await handler({}, context, cb);
-      } catch (err) {}
-      expect(context.state).to.be.an('object');
-    });
-
-    it('should invoke all handlers matching a given route', async () => {
-      const routeHandler1 = sinon.spy();
-      const routeHandler2 = sinon.spy();
-      const handler = router.handler();
-
-      router.get('/foo', routeHandler1, routeHandler2);
       await handler(getEvent('GET', '/foo'), context, cb);
 
-      expect(routeHandler1).to.have.been.called;
-      expect(routeHandler2).to.have.been.called;
+      const args = cb.getCall(0).args;
+      expect(cb).to.have.been.called;
+      expect(args[0]).to.equal(null);
+      expect(args[1].statusCode).to.equal(504);
+    });
+
+    it('should invoke handler matching a given route', async () => {
+      const routeHandler = sinon.spy();
+      const handler = router.handler();
+
+      router.get('/foo', routeHandler);
+      await handler(getEvent('GET', '/foo'), context, cb);
+
+      expect(routeHandler).to.have.been.called;
     });
 
     it('should invoke callback with successful response if handler does not throw', async () => {
@@ -86,12 +87,12 @@ describe('Lambda Router', () => {
       const args = cb.getCall(0).args;
       expect(cb).to.have.been.called;
       expect(args[0]).to.equal(null);
-      expect(JSON.parse(args[1].body).success).to.equal(true);
-      expect(JSON.parse(args[1].body).foo).to.equal('bar');
+      expect(args[1].statusCode).to.equal(200);
+      expect(JSON.parse(args[1].body).message).to.equal('success');
     });
 
     it('should invoke callback with failure response if handler throws', async () => {
-      const routeHandler = sinon.stub().rejects(Boom.notFound('Resource not found', {foo: 'bar' }));
+      const routeHandler = sinon.stub().rejects(new Error('test exception'));
       const handler = router.handler();
 
       router.get('/foo', routeHandler);
@@ -100,17 +101,8 @@ describe('Lambda Router', () => {
       const args = cb.getCall(0).args;
       expect(cb).to.have.been.called;
       expect(args[0]).to.equal(null);
-      expect(JSON.parse(args[1].body).success).to.equal(false);
-    });
-
-    it('should invoke callback with error response if route not found', async () => {
-      const handler = router.handler();
-      await handler(getEvent('GET', '/foo'), context, cb);
-
-      const args = cb.getCall(0).args;
-      expect(cb).to.have.been.called;
-      expect(args[0]).to.equal(null);
-      expect(JSON.parse(args[1].body).success).to.equal(false);
+      expect(args[1].statusCode).to.equal(500);
+      expect(JSON.parse(args[1].body).message).to.equal('error');
     });
 
     it('should attach provided headers to response', async () => {
@@ -142,18 +134,19 @@ describe('Lambda Router', () => {
     });
 
     it('should call `onError` handler if route handler throws', async () => {
-      const onError = sinon.stub().returns({ foo: 'bar' });
+      const bodyStub = sinon.stub();
+      const onError = sinon.stub().returns({ getResponse: bodyStub });
       router = new LambdaRouter({ onError });
-      const routeHandler = sinon.stub().rejects(Boom.notFound('Resource not found'));
+      const routeHandler = sinon.stub().rejects(new Error('testing exception'));
       const handler = router.handler();
 
       router.get('/foo', routeHandler);
       await handler(getEvent('GET', '/foo'), context, cb);
 
       const args = cb.getCall(0).args;
+      expect(args[0]).to.equal(null);
       expect(cb).to.have.been.called;
       expect(onError).to.have.been.called;
-      expect(JSON.parse(args[1].body).foo).to.equal('bar');
     });
   });
 });
