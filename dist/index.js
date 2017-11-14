@@ -25,7 +25,7 @@ class LambdaRouter {
         const handler = _this._divineRoute(event);
 
         if (!handler) {
-          cb(null, new Response('Resource not found', 504));
+          cb(null, new Response('Resource not found', 504).getResponse());
           return;
         }
 
