@@ -64,7 +64,7 @@ class LambdaRouter {
   }
 
   _wrap(method, path, handler) {
-    if (this.routes[method] && this.routers[method][path]) throw new Error('You can only declare on handler for each method')
+    if (this.routes[method] && this.routes[method][path]) throw new Error('You can only declare on handler for each method')
     this.routes = {
       ...this.routes,
       [method]: {

@@ -14,6 +14,7 @@ class LambdaRouter {
   handler() {
     var _this = this;
 
+    //eslint-disable-next-line
     return (() => {
       var _ref = _asyncToGenerator(function* (event, context, cb) {
         // Prevent callback waiting.
@@ -75,7 +76,7 @@ class LambdaRouter {
   }
 
   _wrap(method, path, handler) {
-    if (this.routes[method] && this.routers[method][path]) throw new Error('You can only declare on handler for each method');
+    if (this.routes[method] && this.routes[method][path]) throw new Error('You can only declare on handler for each method');
     this.routes = _extends({}, this.routes, {
       [method]: _extends({}, this.routes[method], {
         [path]: handler
